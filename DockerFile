@@ -1,0 +1,13 @@
+FROM python:3.7
+
+ENV VIRTUAL_ENV venv
+COPY . /app
+
+WORKDIR /app
+RUN python -m venv ${VIRTUAL_ENV} && \
+    /bin/bash -c "source ${VIRTUAL_ENV}/bin/activate" && \
+    pip install .
+
+EXPOSE 5000 27017
+
+CMD ["start-app"]

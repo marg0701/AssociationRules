@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" charset="utf-8">
+    <title>Movies</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.5/jquery.csv.js"></script> -->
+
+    <link rel="shortcut icon" type="image/png" href="static/favicon.png"/>
+  </head>
+  <body>
+    <div class="jumbotron text-center">
+      <h1 class="display-3"><b>Movie Recommendations</b></h1>
+    </div>
+
+    <div class="row" style="margin-top: 20px; margin-left: 20px; margin-right: 20px">
+      <div class="col col-sm-4">
+
+        <!-- TOP 5 MOVIES -->
+        <div class="row">
+          <div class="container">
+            <div class="panel-group">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#collapse1" style="color: inherit;">Top 5 Movies</a>
+                  </h4>
+                </div>
+                <div id="collapse1" class="panel-collapse collapse">
+                  <ul class="list-group">
+                    {% for movie in movielist %}
+                    <li class="list-group-item movie">{{ movie }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEARCH MOVIES -->
+        <div class="row" style="margin-top: 20px;">
+          <div class="container">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#" style="color: inherit;">Search Movies</a>
+            </h4>
+            <div class="input-group mb-3">
+              <input type="text" class="form-control movie-to-search" placeholder="Type any title" aria-label="Recipient's username" aria-describedby="basic-addon2">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary search-movie" type="button">Search</button>
+              </div>
+            </div>
+          </div>
+          <div class="container">
+            <div id="search-results">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MOVIE CARD -->
+      <div class="col col-sm-4">
+        <div class="row">
+          <div class="container" id="movie-card">
+          </div>
+        </div>
+      </div>
+
+      <!-- PLAYLIST -->
+      <div class="col col-sm-4">
+        <div class="row">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#collapse4" style="color: inherit;">Your Playlist</a>
+          </h4>
+        </div>
+        <div class="row">
+          <div class="playlist" id="collapse4">
+            <ol class="list-group">
+              <!-- <li class="list-group-item"></li> -->
+            </ol>
+          </div>
+        </div>
+
+        <!-- RECOMMENDATIONS -->
+        <div class="row" style="margin-top: 20px;">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#collapse2" style="color: inherit;">You'll also like</a>
+          </h4>
+        </div>
+        <div class="row">
+          <div class="recommendations" id="collapse2">
+          </div>
+        </div>
+
+        <!-- MAXRECOM -->
+        <div class="row" style="margin-top: 20px;">
+          <h4 class="panel-title">
+            <a style="color: inherit;">Max Recommendations</a>
+          </h4>
+        </div>
+        <div class="row">
+          <input class="form-control" type="number" id="maxrecom" value="3">
+        </div>
+
+      </div>
+    </div>
+    <script type="text/javascript">
+      $(function() {
+        let movie;
+        let playlist = [];
+        let playlisthtml = "";
+        let maxrecom = 3;
+
+        // DISPLAY DETAIL OF A MOVIE
+        $("body").on("click", ".movie", function() {
+          var mov = $(this);
+          movie = mov.html();
+          $(".recommendations").html("");
+          console.log(movie);
+          $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "http://localhost:5000/",
+            dataType : "json",
+            data : JSON.stringify({
+              "movie": movie
+              // "movie": mov.html()
+            }),
+            success : function(result) {
+              console.log("ok");
+              $("#movie-card").html(result["html"]);
+            }
+          });
+        });
+
+        // GET RECOMMENDATIONS FOR A MOVIE
+        $("body").on("click", ".add-movie", function() {
+          playlist.push(movie);
+          playlisthtml = playlisthtml + '<li class="list-group-item">' + movie + '</li>'
+          $(".playlist").html(playlisthtml);
+          console.log(playlist);
+          $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "http://localhost:5000/recommend",
+            dataType : "json",
+            data : JSON.stringify({
+              "movie": movie,
+              "maxrecom": maxrecom
+            }),
+            success : function(result) {
+              $(".recommendations").html(result["html"]);
+            }
+          });
+        });
+
+        // SEARCH FOR A MOVIE
+        $("body").on("click", ".search-movie", function() {
+          console.log($(".movie-to-search").val());
+          $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "http://localhost:5000/search",
+            dataType : "json",
+            data : JSON.stringify({
+              "search": $(".movie-to-search").val()
+            }),
+            success : function(result) {
+              console.log(result);
+              $("#search-results").html(result["html"]);
+            }
+          });
+        });
+
+        // SUBMIT PLAYLIST
+        $("body").on("click", ".play-playlist", function() {
+          $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "http://localhost:5000/playlist",
+            dataType : "json",
+            data : JSON.stringify({
+              "playlist": playlist
+            }),
+            success : function(result) {
+              console.log(result);
+              playlist = [];
+              // $("#search-results").html("");
+              // $("#movie-card").html("");
+              // $(".recommendations").html("");
+              alert("Thanks for submitting your playlist!");
+              location.reload();
+            }
+          });
+        });
+
+        // PRESS ENTER TO SEARCH
+        $('.movie-to-search').keypress(function (e) {
+         var key = e.which;
+         if(key == 13)  // the enter key code
+          {
+            $('.search-movie').click();
+            return false;
+          }
+        });
+
+        $("#maxrecom").change(function() {
+          maxrecom = parseInt($(this).val());
+        })
+
+      })
+    </script>
+  </body>
+</html>

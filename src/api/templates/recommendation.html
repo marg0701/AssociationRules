@@ -1,0 +1,12 @@
+{% for tit, img in recommendations %}
+<div class="row">
+  <div class="card" style="width:100px">
+    <img class="card-img-top" src="{{img}}" style="width:100%">
+    <div class="card-body">
+      <h2 class="card-title movie">{{tit}}</h2>
+      <!-- <a class="btn btn-primary movie recommendation">View</a> -->
+    </div>
+  </div>
+</div>
+<br>
+{% endfor %}
